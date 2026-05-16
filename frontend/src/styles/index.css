@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #211a16;
+  background: #fff3d6;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255, 209, 102, 0.38), transparent 26%),
+    radial-gradient(circle at 90% 0%, rgba(79, 159, 82, 0.16), transparent 28%),
+    #fff3d6;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.paper-texture {
+  background-color: #fffaf0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(33, 26, 22, 0.08) 1px, transparent 0);
+  background-size: 18px 18px;
+}
+
+.comic-border {
+  border: 3px solid #211a16;
+  box-shadow: 5px 5px 0 #211a16;
+}
+
+.doodle-border {
+  border: 3px solid #211a16;
+  border-radius: 22px 18px 26px 16px;
+}
+
+.speech-bubble {
+  position: relative;
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  left: 26px;
+  bottom: -15px;
+  width: 24px;
+  height: 24px;
+  background: inherit;
+  border-right: 3px solid #211a16;
+  border-bottom: 3px solid #211a16;
+  transform: rotate(45deg);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

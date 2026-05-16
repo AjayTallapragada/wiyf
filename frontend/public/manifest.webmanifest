@@ -1,0 +1,16 @@
+{
+  "name": "What's In Your Fridge?",
+  "short_name": "WIYF",
+  "description": "A playful AI pantry helper and recipe generator.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff3d6",
+  "theme_color": "#ef4444",
+  "icons": [
+    {
+      "src": "/icons/fridge-doodle.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

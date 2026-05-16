@@ -1,0 +1,15 @@
+{
+  "ingredients": [
+    {
+      "id": "9e5e8847-bb3c-4020-8f42-682a00e8c89d",
+      "name": "potato",
+      "category": "vegetable",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    }
+  ],
+  "updated_at": "2026-05-16T17:36:02.324629+00:00"
+}
