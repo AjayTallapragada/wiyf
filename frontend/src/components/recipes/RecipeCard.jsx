@@ -3,7 +3,32 @@ import { motion } from 'framer-motion';
 import ComicButton from '../ui/ComicButton';
 import ComicCard from '../ui/ComicCard';
 
-export default function RecipeCard({ recipe, onFavorite, onOpen }) {
+function normalizeIngredient(name = '') {
+  return name.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function getMatchSummary(recipe, pantry) {
+  const pantryNames = new Set((pantry?.ingredients || []).map((item) => normalizeIngredient(item.name)).filter(Boolean));
+  const recipeNames = (recipe.ingredients?.length ? recipe.ingredients.map((item) => item.name) : recipe.ingredients_used || [])
+    .map(normalizeIngredient)
+    .filter(Boolean);
+  const uniqueRecipeNames = [...new Set(recipeNames)];
+  const missingNames = [...new Set((recipe.missing_ingredients || []).map(normalizeIngredient).filter(Boolean))];
+  const matchedNames = uniqueRecipeNames.filter((name) => (
+    pantryNames.has(name) || [...pantryNames].some((pantryName) => pantryName.includes(name) || name.includes(pantryName))
+  ));
+  const total = Math.max(uniqueRecipeNames.length, matchedNames.length + missingNames.length);
+  const needed = missingNames.length ? missingNames : uniqueRecipeNames.filter((name) => !matchedNames.includes(name));
+
+  return {
+    matched: matchedNames.length,
+    total,
+    needed: needed.slice(0, 4),
+  };
+}
+
+export default function RecipeCard({ recipe, pantry, onFavorite, onOpen }) {
+  const match = getMatchSummary(recipe, pantry);
   return (
     <ComicCard
       className={`flex h-full flex-col gap-4 bg-paper ${onOpen ? 'cursor-pointer' : ''}`}
@@ -24,6 +49,14 @@ export default function RecipeCard({ recipe, onFavorite, onOpen }) {
         <span className="rounded-xl border-2 border-ink bg-cream p-2"><Flame className="mx-auto" size={18} />{recipe.calories}</span>
         <span className="rounded-xl border-2 border-ink bg-cream p-2"><Salad className="mx-auto" size={18} />{recipe.protein}g</span>
       </div>
+      {match.total ? (
+        <div className="rounded-2xl border-3 border-ink bg-butter/70 p-3 shadow-sticker">
+          <p className="font-doodle text-lg font-bold text-cocoa">You have {match.matched}/{match.total} ingredients</p>
+          <p className="font-hand text-xl leading-snug text-ink">
+            {match.needed.length ? `Need only ${match.needed.join(', ')}` : 'Ready from your pantry'}
+          </p>
+        </div>
+      ) : null}
       <div>
         <p className="font-doodle text-lg font-bold">Uses</p>
         <div className="mt-2 flex flex-wrap gap-2">

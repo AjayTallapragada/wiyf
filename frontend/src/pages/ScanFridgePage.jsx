@@ -5,9 +5,9 @@ import AiChef from '../components/ai/AiChef';
 import ComicButton from '../components/ui/ComicButton';
 import ComicCard from '../components/ui/ComicCard';
 import IngredientBadge from '../components/ui/IngredientBadge';
-import { detectIngredients, getPantry } from '../services/api';
+import { detectIngredients, generateRecipes, getPantry } from '../services/api';
 
-export default function ScanFridgePage({ setPantry, setPage, scanFile, setScanFile, scanPreview, setScanPreview, scanProgress, setScanProgress, scanResult, setScanResult, scanError, setScanError, scanLoading, setScanLoading }) {
+export default function ScanFridgePage({ setPantry, preferences, setRecipes, setSelectedRecipe, setPage, scanFile, setScanFile, scanPreview, setScanPreview, scanProgress, setScanProgress, scanResult, setScanResult, scanError, setScanError, scanLoading, setScanLoading }) {
   const inputRef = useRef(null);
   const cameraRef = useRef(null);
 
@@ -29,12 +29,22 @@ export default function ScanFridgePage({ setPantry, setPage, scanFile, setScanFi
         if (event.total) setScanProgress(Math.round((event.loaded / event.total) * 65));
       });
       setScanResult(data);
+      const foundAutoRecipeIngredient = data.ingredients?.some((ingredient) => {
+        const name = ingredient.name.toLowerCase();
+        return name.includes('tomato') || name.includes('chicken');
+      });
       // Refresh pantry from the server (saved by the detection endpoint)
       try {
         const pantryData = await getPantry();
         setPantry(pantryData);
       } catch (err) {
         // ignore pantry fetch errors for now
+      }
+      if (foundAutoRecipeIngredient) {
+        const recipeData = await generateRecipes({ ingredients: data.ingredients, preferences });
+        setRecipes(recipeData.recipes);
+        setSelectedRecipe(null);
+        setPage('recipes');
       }
       setScanProgress(100);
     } catch (scanError) {

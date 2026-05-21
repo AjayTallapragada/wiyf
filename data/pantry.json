@@ -9,7 +9,37 @@
       "confidence": 1.0,
       "source": "manual",
       "raw_label": null
+    },
+    {
+      "id": "0646c022-d81b-4904-a736-411c3767bcc2",
+      "name": "egg",
+      "category": "protein",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 0.98,
+      "source": "vision",
+      "raw_label": "egg"
+    },
+    {
+      "id": "2d61bf98-91e2-45bd-a849-142d53d9fd63",
+      "name": "tomato",
+      "category": "vegetable",
+      "quantity": 3.0,
+      "unit": "item",
+      "confidence": 0.99,
+      "source": "vision",
+      "raw_label": "tomato"
+    },
+    {
+      "id": "f24ec9fd-abf4-4d25-80f4-c7c8f1ac5634",
+      "name": "chicken",
+      "category": "protein",
+      "quantity": 2.0,
+      "unit": "item",
+      "confidence": 0.99,
+      "source": "vision",
+      "raw_label": "chicken"
     }
   ],
-  "updated_at": "2026-05-16T17:36:02.324629+00:00"
+  "updated_at": "2026-05-19T11:54:13.109993+00:00"
 }

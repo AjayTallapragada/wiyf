@@ -54,6 +54,7 @@ export default function RecipeResultsPage({ pantry, preferences, recipes, setRec
           <RecipeCard
             key={recipe.id}
             recipe={recipe}
+            pantry={pantry}
             onFavorite={(eventRecipe) => favorite(eventRecipe)}
             onOpen={() => setSelectedRecipe(recipe)}
           />
