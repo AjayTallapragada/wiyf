@@ -1,8 +1,6 @@
 import base64
 import json
-import urllib.request
-import urllib.error
-import asyncio
+import httpx
 import re
 from typing import List
 from fastapi import HTTPException, UploadFile
@@ -92,19 +90,14 @@ Example output format:
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         
-        def make_request():
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(body).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=30) as response:
-                return response.read()
-
-        loop = asyncio.get_event_loop()
-        raw_resp = await loop.run_in_executor(None, make_request)
-        resp_data = json.loads(raw_resp.decode("utf-8"))
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            try:
+                response = await client.post(url, json=body)
+                response.raise_for_status()
+                resp_data = response.json()
+            except Exception as e:
+                # Raise clean exception to be caught in main handler
+                raise RuntimeError(f"HTTP request to Gemini API failed: {str(e)}")
 
         if not isinstance(resp_data, dict):
             return []
