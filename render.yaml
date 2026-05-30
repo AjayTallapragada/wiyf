@@ -30,9 +30,7 @@ services:
   # 3. Spring Boot Proxy Controller
   - type: web
     name: wiyf-backend-spring
-    env: java
-    buildCommand: mvn clean package -DskipTests
-    startCommand: java -jar target/backend-spring-0.0.1-SNAPSHOT.jar --server.port=8082
+    env: docker
     rootDir: backend-spring
     envVars:
       - key: app.ai-service-url
