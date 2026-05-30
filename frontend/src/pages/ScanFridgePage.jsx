@@ -7,6 +7,55 @@ import ComicCard from '../components/ui/ComicCard';
 import IngredientBadge from '../components/ui/IngredientBadge';
 import { detectIngredients, generateRecipes, getPantry, savePantry } from '../services/api';
 
+function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Canvas to Blob failed'));
+            return;
+          }
+          const compressedFile = new File([blob], file.name || 'scan.jpg', {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = (err) => {
+      reject(err);
+    };
+  });
+}
+
 export default function ScanFridgePage({ pantry, setPantry, preferences, setRecipes, setSelectedRecipe, setPage, scanFile, setScanFile, scanPreview, setScanPreview, scanProgress, setScanProgress, scanResult, setScanResult, scanError, setScanError, scanLoading, setScanLoading }) {
   const inputRef = useRef(null);
   const cameraRef = useRef(null);
@@ -39,16 +88,31 @@ export default function ScanFridgePage({ pantry, setPantry, preferences, setReci
     setCameraActive(false);
   }
 
-  function handleFile(nextFile) {
+  async function handleFile(nextFile) {
     if (!nextFile) return;
+    
     if (scanPreview?.startsWith('blob:')) {
       URL.revokeObjectURL(scanPreview);
     }
+    
+    const originalUrl = URL.createObjectURL(nextFile);
+    setScanPreview(originalUrl);
     setScanFile(nextFile);
-    setScanPreview(URL.createObjectURL(nextFile));
     setScanResult(null);
     setScanError('');
     setScanProgress(0);
+
+    try {
+      const compressed = await compressImage(nextFile, 1024, 1024, 0.85);
+      setScanFile(compressed);
+      
+      const compressedUrl = URL.createObjectURL(compressed);
+      setScanPreview(compressedUrl);
+      
+      URL.revokeObjectURL(originalUrl);
+    } catch (err) {
+      console.warn('Image compression failed, using original file:', err);
+    }
   }
 
   async function startCamera() {
