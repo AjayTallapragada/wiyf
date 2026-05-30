@@ -43,18 +43,19 @@ class IngredientDetectionService:
         encoded_image = base64.b64encode(image_bytes).decode("utf-8")
         
         prompt = """You are the AI Vision assistant of the "What's In Your Fridge?" recipe app.
-Your task is to analyze the provided image (which is a photo of a refrigerator, freezer, pantry, kitchen counter, or grocery items) and detect all edible ingredients, vegetables, fruits, condiments, sauces, meats, grains, beverages, dairy products, or herbs visible.
+Your task is to analyze the provided image (which is a photo of a refrigerator, freezer, pantry, kitchen counter, or grocery items) and detect all edible ingredients, vegetables, fruits, condiments, sauces, meats, grains, beverages, dairy products, herbs, or packaged dry goods visible.
 
 For each detected ingredient, output a JSON object containing:
-- "name": The clean, singular/common name of the ingredient (e.g. "carrot", "milk", "ketchup", "chicken breast", "cheddar cheese", "spinach", "apple"). Keep it simple and lowercase.
+- "name": The clean, singular/common name of the ingredient (e.g. "carrot", "milk", "ketchup", "chicken breast", "cheddar cheese", "spinach", "apple", "vermicelli", "pasta"). Keep it simple and lowercase.
 - "confidence": A float between 0.0 and 1.0 indicating your confidence that the item is present in the image. Be honest and realistic (usually between 0.6 and 1.0 for clearly visible items).
 - "category": One of these exact categories: "vegetable", "fruit", "dairy", "protein", "grain", "beverage", "packaged", "herb", "other".
 
 Rules:
 1. Only detect actual ingredients and food items.
-2. Ignore cooking utensils, plates, bowls, fridge shelves, drawers, containers, or packaging itself (unless the content of the packaging is clear, e.g. "greek yogurt" or "mayonnaise").
-3. Group duplicates or multiple instances (e.g. if there are 3 apples, just list "apple" once with the highest confidence).
-4. Be as comprehensive as possible. Look closely for items in jars, shelves, door racks, and produce drawers.
+2. Ignore cooking utensils, plates, bowls, fridge shelves, drawers, or empty containers.
+3. Do NOT ignore packaged foods or dry goods (e.g. noodles, vermicelli, pasta, flour, rice, spices, cans). If their label or product packaging is visible, detect them.
+4. Group duplicates or multiple instances (e.g. if there are 3 apples, just list "apple" once with the highest confidence).
+5. Be as comprehensive as possible. Look closely for items in jars, shelves, door racks, produce drawers, and pantry shelves.
 
 Return the result as a JSON object with a single top-level key "ingredients", containing a list of detected ingredients.
 Example output format:
@@ -62,7 +63,7 @@ Example output format:
   "ingredients": [
     {"name": "carrot", "confidence": 0.95, "category": "vegetable"},
     {"name": "milk", "confidence": 0.9, "category": "dairy"},
-    {"name": "mayonnaise", "confidence": 0.8, "category": "packaged"}
+    {"name": "vermicelli", "confidence": 0.88, "category": "packaged"}
   ]
 }"""
 
