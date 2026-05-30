@@ -1,13 +1,18 @@
 import axios from 'axios';
 
+const hfToken = import.meta.env.VITE_HF_TOKEN;
+const headers = hfToken ? { Authorization: `Bearer ${hfToken}` } : {};
+
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api',
   timeout: 300000,
+  headers,
 });
 
 export const detectionApi = axios.create({
   baseURL: import.meta.env.VITE_AI_API_BASE_URL || 'http://127.0.0.1:8082/api',
   timeout: 300000,
+  headers,
 });
 
 export async function detectIngredients(file, onUploadProgress) {
