@@ -1,7 +1,27 @@
 {
   "ingredients": [
     {
-      "id": "9e5e8847-bb3c-4020-8f42-682a00e8c89d",
+      "id": "32d00d75-6cf5-48c4-a385-9ac6cb96ee58",
+      "name": "bread",
+      "category": "grain",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 0.98,
+      "source": "vision",
+      "raw_label": "bread"
+    },
+    {
+      "id": "fa2433bf-bec7-4156-afaa-ec46c02c9f33",
+      "name": "okra",
+      "category": "vegetable",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "12e241d5-a4e1-4c20-aef5-c49c43096e12",
       "name": "potato",
       "category": "vegetable",
       "quantity": 1.0,
@@ -11,35 +31,125 @@
       "raw_label": null
     },
     {
-      "id": "0646c022-d81b-4904-a736-411c3767bcc2",
-      "name": "egg",
-      "category": "protein",
+      "id": "2afa77b8-ba1e-4777-ba8d-72a7f620e95f",
+      "name": "tomato",
+      "category": "vegetable",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "ff65669d-1b58-4dca-8f40-bf09b41a2551",
+      "name": "onion",
+      "category": "vegetable",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "6f736fd1-19e7-44e3-99e2-2b3a7cf78c0d",
+      "name": "cabbage",
+      "category": "vegetable",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "88aff305-84e4-4254-bdb0-8fbe4993af31",
+      "name": "carrot",
+      "category": "vegetable",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "4269fe1f-74be-49aa-b750-13efc6343669",
+      "name": "rice",
+      "category": "grain",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "11962755-67cb-4355-9ed9-4b3db65d7fc0",
+      "name": "garlic",
+      "category": "other",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "9af56a74-1800-43eb-9123-4f0d6ace584f",
+      "name": "clove",
+      "category": "other",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "66f81c00-68bd-4e86-ba98-1107e5e5c8d9",
+      "name": "ginger",
+      "category": "other",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "9729bd7c-04ac-48eb-ab8c-ae770f78c498",
+      "name": "cardamom",
+      "category": "other",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "9d80e8d4-fc7d-4706-bbed-3c30619ff6ec",
+      "name": "elachi",
+      "category": "other",
+      "quantity": 1.0,
+      "unit": "item",
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
+    },
+    {
+      "id": "92ce498a-8941-4835-bd85-2c8401feeef6",
+      "name": "beet",
+      "category": "vegetable",
       "quantity": 1.0,
       "unit": "item",
       "confidence": 0.98,
       "source": "vision",
-      "raw_label": "egg"
+      "raw_label": "beet"
     },
     {
-      "id": "2d61bf98-91e2-45bd-a849-142d53d9fd63",
-      "name": "tomato",
-      "category": "vegetable",
-      "quantity": 3.0,
+      "id": "73a8db9e-49d3-49e6-aefc-6f6615226485",
+      "name": "green chilly",
+      "category": "other",
+      "quantity": 1.0,
       "unit": "item",
-      "confidence": 0.99,
-      "source": "vision",
-      "raw_label": "tomato"
-    },
-    {
-      "id": "f24ec9fd-abf4-4d25-80f4-c7c8f1ac5634",
-      "name": "chicken",
-      "category": "protein",
-      "quantity": 2.0,
-      "unit": "item",
-      "confidence": 0.99,
-      "source": "vision",
-      "raw_label": "chicken"
+      "confidence": 1.0,
+      "source": "manual",
+      "raw_label": null
     }
   ],
-  "updated_at": "2026-05-19T11:54:13.109993+00:00"
+  "updated_at": "2026-05-30T15:55:48.987269+00:00"
 }

@@ -4,7 +4,6 @@ import { categoryStyles } from '../../utils/categories';
 export default function IngredientBadge({ ingredient, onRemove }) {
   return (
     <motion.div
-      layout
       initial={{ opacity: 0, scale: 0.84 }}
       animate={{ opacity: 1, scale: 1 }}
       className={`flex items-center justify-between gap-3 rounded-full border-2 px-4 py-2 font-hand text-lg ${categoryStyles[ingredient.category] || categoryStyles.other}`}

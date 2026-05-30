@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -21,13 +21,12 @@ class Settings(BaseSettings):
     ]
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "llama3.1"
-    hf_image_model: str = "yvelos/beit-food-384"
-    hf_image_models: List[str] = [
-        "yvelos/beit-food-384",
-        "dima806/fruit_vegetable_image_detection",
-    ]
-    # Absolute path to the bundled YOLO model inside the backend folder
-    yolo_model_path: str = str(Path(__file__).resolve().parents[2] / "yolov8n.pt")
+    # Google Gemini API settings. Set WIYF_GEMINI_API_KEY in .env or the shell.
+    gemini_api_key: Optional[str] = None
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_api_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    # Chef persona: witty, playful, serious
+    chef_persona: str = "funny, interactive, pantry-first"
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="WIYF_")
 

@@ -1,38 +1,53 @@
 # What's In Your Fridge?
 
-A playful full-stack AI kitchen assistant that scans fridge photos, detects ingredients, stores pantry inventory, and generates personalized recipes with Ollama.
+A full-stack AI kitchen assistant that scans fridge photos, detects ingredients, stores pantry inventory, and generates personalized recipes.
 
 ## Stack
 
 - Frontend: React, Vite, Tailwind CSS, Framer Motion, Axios
-- Backend: FastAPI
-- AI: YOLOv8, Hugging Face Transformers, OCR via EasyOCR or Tesseract, Ollama
-- Storage: JSON repository with a clean interface for future MongoDB/PostgreSQL adapters
+- App backend: FastAPI for pantry, preferences, recipes, favorites, and meal planning
+- Detection proxy: Spring Boot forwards multipart image uploads to the AI service
+- AI service: FastAPI + YOLOv8 + OpenCV for ingredient detection
+
+## Service Layout
+
+- Frontend: `frontend/`
+- App backend: `backend/`
+- Spring Boot proxy: `backend-spring/`
+- AI service: `ai-service/`
 
 ## Run Locally
 
-### Backend
+### 1. App backend
 
 ```powershell
 cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8080
 ```
 
-Optional local AI services:
+### 2. AI service
 
-- Start Ollama: `ollama serve`
-- Pull a recipe model: `ollama pull llama3.1`
-- Install vision/OCR extras when you want real local detection: `pip install -r requirements-ai.txt`
-- Default Hugging Face vision models:
-  - `yvelos/beit-food-384` for broad food classification across Food101, UECFood256, and FruitVeg81 labels.
-  - `dima806/fruit_vegetable_image_detection` for produce-focused fruit and vegetable classification.
-- Override models with `WIYF_HF_IMAGE_MODELS='["model/name","another/model"]'`.
-- YOLO/OCR/Hugging Face dependencies are lazy-loaded and gracefully fall back to demo detections when unavailable.
+```powershell
+cd ai-service
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8081
+```
 
-### Frontend
+### 3. Spring Boot proxy
+
+```powershell
+cd backend-spring
+mvn spring-boot:run
+```
+
+The proxy listens on `8082` and forwards `POST /api/detect` to the AI service on `8081`.
+
+### 4. Frontend
 
 ```powershell
 cd frontend
@@ -40,15 +55,46 @@ npm install
 npm run dev
 ```
 
-Set `VITE_API_BASE_URL=http://127.0.0.1:8000/api` if your backend uses another host.
+## Environment Variables
 
-## Architecture Notes
+- `VITE_API_BASE_URL` defaults to `http://127.0.0.1:8080/api`
+- `VITE_AI_API_BASE_URL` defaults to `http://127.0.0.1:8082/api`
+- `WIYF_GEMINI_API_KEY` enables Gemini recipe generation in the FastAPI backend
+- `WIYF_GEMINI_MODEL` defaults to `gemini-2.5-flash`
+- `app.ai-service-url` in `backend-spring/src/main/resources/application.yml` defaults to `http://127.0.0.1:8081`
 
-- `backend/app/services/detection_service.py` orchestrates YOLO, Hugging Face image classification, OCR, normalization, and fallback detection.
-- `backend/app/inventory/json_store.py` is the storage adapter boundary. Replace it with MongoDB/PostgreSQL without changing routes.
-- `backend/app/prompts/recipe_prompts.py` keeps recipe prompt generation modular.
-- Frontend pages are route-based and share comic-style UI primitives from `frontend/src/components/ui`.
+## Detection Flow
 
-## Bonus Feature Hooks
+1. The user uploads or captures a fridge image on the Scan page.
+2. React sends the image as `multipart/form-data` to the Spring Boot proxy.
+3. Spring Boot forwards the file to the FastAPI AI service.
+4. YOLOv8 runs inference, filters detections below 0.5 confidence, removes duplicates, and maps ingredient categories.
+5. The frontend renders detected ingredient chips, then imports them into pantry state when the user clicks Open Pantry.
 
-The app includes routes and UI placeholders for voice input, barcode scanning, expiry tracking, nutrition analysis, shopping lists, meal planning, an AI cooking assistant character, push notifications, and PWA/offline support.
+## Expected API Response
+
+```json
+{
+  "ingredients": [
+    {
+      "name": "tomato",
+      "confidence": 0.94,
+      "category": "vegetable"
+    },
+    {
+      "name": "egg",
+      "confidence": 0.91,
+      "category": "protein"
+    }
+  ]
+}
+```
+
+## Accuracy Improvements Later
+
+- Fine-tune YOLO on fridge-specific ingredient images.
+- Add a custom label map that merges more synonyms and brand names.
+- Add OCR for packaging and expiration labels.
+- Combine detection with segmentation to reduce false positives from reflections and transparent containers.
+- Track scan history so repeated detections can reinforce confidence.
+- Add a review step for ambiguous detections before they reach pantry state.

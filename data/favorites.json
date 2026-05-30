@@ -1,1 +1,106 @@
-[]
+[
+  {
+    "recipe": {
+      "id": "e2807d4c-c743-49a2-bd71-e45663fd0b96",
+      "title": "Vegetable Pulao",
+      "description": "Transform your fridge's motley crew of veggies into a harmonious, aromatic rice dish!",
+      "cooking_time": 15,
+      "calories": 300,
+      "protein": 7,
+      "ingredients": [
+        {
+          "name": "rice",
+          "quantity": "1 cup"
+        },
+        {
+          "name": "onion",
+          "quantity": "1/2"
+        },
+        {
+          "name": "carrot",
+          "quantity": "1/2"
+        },
+        {
+          "name": "potato",
+          "quantity": "1/2"
+        },
+        {
+          "name": "cabbage",
+          "quantity": "1/4 cup chopped"
+        },
+        {
+          "name": "tomato",
+          "quantity": "1/2"
+        },
+        {
+          "name": "ginger",
+          "quantity": "1/2 inch"
+        },
+        {
+          "name": "garlic",
+          "quantity": "1 clove"
+        },
+        {
+          "name": "green chilly",
+          "quantity": "1"
+        },
+        {
+          "name": "clove",
+          "quantity": "1"
+        },
+        {
+          "name": "cardamom",
+          "quantity": "1"
+        },
+        {
+          "name": "oil",
+          "quantity": "1 tbsp"
+        },
+        {
+          "name": "water",
+          "quantity": "2 cups"
+        },
+        {
+          "name": "salt",
+          "quantity": "to taste"
+        },
+        {
+          "name": "garam masala",
+          "quantity": "1/2 tsp"
+        }
+      ],
+      "ingredients_used": [
+        "rice",
+        "onion",
+        "carrot",
+        "potato",
+        "cabbage",
+        "tomato",
+        "ginger",
+        "garlic",
+        "green chilly",
+        "clove",
+        "cardamom"
+      ],
+      "missing_ingredients": [
+        "oil",
+        "garam masala"
+      ],
+      "instructions": [
+        "Wash and soak rice for 15 minutes, then drain.",
+        "Heat oil in a pressure cooker. Add clove and cardamom.",
+        "Add sliced onion, ginger, garlic, and green chilly. Saut\u00e9 until onion is soft.",
+        "Add chopped carrot, potato, cabbage, and tomato. Cook for 2-3 minutes.",
+        "Add garam masala and salt. Mix well.",
+        "Add the soaked rice and water. Stir gently.",
+        "Close the lid and cook for 2 whistles. Let the pressure release naturally. Fluff and serve."
+      ],
+      "tags": [
+        "one-pot",
+        "vegetarian"
+      ],
+      "ai_message": "Even your veggies deserve a promotion to a starring role! This pulao is their big break!"
+    },
+    "saved_at": "2026-05-30T15:58:00.704409+00:00"
+  }
+]

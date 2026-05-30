@@ -1,0 +1,349 @@
+import tempfile
+import os
+import base64
+import json
+import urllib.request
+import urllib.error
+import asyncio
+import re
+from pathlib import Path
+from threading import Lock
+from typing import Dict, List, Optional
+
+from fastapi import HTTPException, UploadFile
+
+from app.detections.normalizer import categorize, normalize_name, normalize_yolo_label
+from app.models.schemas import DetectionResponse, DetectedIngredient
+
+
+def get_gemini_api_key() -> Optional[str]:
+    # 1. Try env var first
+    key = os.getenv("WIYF_GEMINI_API_KEY")
+    if key:
+        return key
+
+    # 2. Try loading from backend/.env
+    # D:\personal projects\wiyf\ai-service\app\services\detection_service.py -> parents[3] is D:\personal projects\wiyf
+    root_dir = Path(__file__).resolve().parents[3]
+    env_file = root_dir / "backend" / ".env"
+    if env_file.exists():
+        try:
+            with open(env_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("WIYF_GEMINI_API_KEY="):
+                        return line.split("=", 1)[1].strip()
+        except Exception:
+            pass
+    return None
+
+
+def get_gemini_model() -> str:
+    model = os.getenv("WIYF_GEMINI_MODEL")
+    if model:
+        return model
+
+    # Try loading from backend/.env
+    root_dir = Path(__file__).resolve().parents[3]
+    env_file = root_dir / "backend" / ".env"
+    if env_file.exists():
+        try:
+            with open(env_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("WIYF_GEMINI_MODEL="):
+                        return line.split("=", 1)[1].strip()
+        except Exception:
+            pass
+    return "gemini-2.5-flash"
+
+
+class IngredientDetectionService:
+    def __init__(self):
+        self._model = None
+        self._model_lock = Lock()
+        # _model_path is a Path to a local model file when available, otherwise None
+        self._model_path: Optional[Path] = self._resolve_model_path()
+
+    def _resolve_model_path(self) -> Optional[Path]:
+        candidates = [
+            Path(__file__).resolve().parents[3] / "model_cache" / "huggingface" / "ultralytics" / "best.pt",
+            Path(__file__).resolve().parents[2] / "third_party" / "Vegetable_Classification_And_Detection" / "best.pt",
+        ]
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+        # No local model found; return None to indicate fallback to a default public model
+        return None
+
+    def _load_model(self):
+        if self._model is not None:
+            return self._model
+
+        with self._model_lock:
+            if self._model is not None:
+                return self._model
+
+            try:
+                from ultralytics import YOLO
+            except Exception as error:  # pragma: no cover - dependency guard
+                raise HTTPException(
+                    status_code=503,
+                    detail="YOLOv8 dependencies are not installed. Install ai-service requirements.txt to enable scanning.",
+                ) from error
+
+            # If a local model file was found, load it. Otherwise fall back to a small
+            # public YOLO model that ultralytics will download automatically. The
+            # fallback allows running detection immediately (less accurate for
+            # fridge-specific classes, but useful for development).
+            if self._model_path is not None:
+                if not self._model_path.exists():
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"YOLO model file not found at {self._model_path}.",
+                    )
+
+                self._model = YOLO(str(self._model_path))
+            else:
+                # Use the official small YOLOv8 model as a fallback
+                fallback = "yolov8n.pt"
+                try:
+                    self._model = YOLO(fallback)
+                except Exception:
+                    raise HTTPException(
+                        status_code=503,
+                        detail=(
+                            "Failed to load fallback YOLO model. "
+                            "Install dependencies and/or provide a local model at model_cache/.../best.pt"
+                        ),
+                    )
+            return self._model
+
+    @staticmethod
+    def _extract_predictions(results) -> List[DetectedIngredient]:
+        detections: Dict[str, DetectedIngredient] = {}
+        for result in results:
+            class_names = getattr(result, "names", {}) or {}
+            boxes = getattr(result, "boxes", None)
+            if boxes is None:
+                continue
+
+            for box in boxes:
+                confidence = float(box.conf.item()) if hasattr(box.conf, "item") else float(box.conf)
+                if confidence < 0.25:
+                    continue
+
+                class_id = int(box.cls.item()) if hasattr(box.cls, "item") else int(box.cls)
+                label = class_names.get(class_id, str(class_id))
+                name = normalize_name(normalize_yolo_label(str(label)))
+                category = categorize(name)
+
+                existing = detections.get(name)
+                if existing is None or confidence > existing.confidence:
+                    detections[name] = DetectedIngredient(
+                        name=name,
+                        confidence=round(confidence, 4),
+                        category=category,
+                    )
+
+        return sorted(detections.values(), key=lambda item: (-item.confidence, item.name))
+
+    def _extract_json_from_text(self, text: str) -> str:
+        """Try to find the first JSON object or array in `text` and return it as a string."""
+        if not text:
+            return text
+        start = None
+        stack = []
+        opening = {"{": "}", "[": "]"}
+        closing = {"}": "{", "]": "["}
+        for i, ch in enumerate(text):
+            if ch in opening and start is None:
+                start = i
+                stack.append(ch)
+                continue
+            if start is not None:
+                if ch in opening:
+                    stack.append(ch)
+                elif ch in closing:
+                    if stack and stack[-1] == closing[ch]:
+                        stack.pop()
+                        if not stack:
+                            return text[start : i + 1]
+                    else:
+                        break
+        m = re.search(r"(\{[\s\S]*\}|\[[\s\S]*\])", text)
+        if m:
+            return m.group(1)
+        return text
+
+    async def _detect_with_gemini(self, image_bytes: bytes, mime_type: str, api_key: str, model: str) -> List[DetectedIngredient]:
+        encoded_image = base64.b64encode(image_bytes).decode("utf-8")
+        
+        prompt = """You are the AI Vision assistant of the "What's In Your Fridge?" recipe app.
+Your task is to analyze the provided image (which is a photo of a refrigerator, freezer, pantry, kitchen counter, or grocery items) and detect all edible ingredients, vegetables, fruits, condiments, sauces, meats, grains, beverages, dairy products, or herbs visible.
+
+For each detected ingredient, output a JSON object containing:
+- "name": The clean, singular/common name of the ingredient (e.g. "carrot", "milk", "ketchup", "chicken breast", "cheddar cheese", "spinach", "apple"). Keep it simple and lowercase.
+- "confidence": A float between 0.0 and 1.0 indicating your confidence that the item is present in the image. Be honest and realistic (usually between 0.6 and 1.0 for clearly visible items).
+- "category": One of these exact categories: "vegetable", "fruit", "dairy", "protein", "grain", "beverage", "packaged", "herb", "other".
+
+Rules:
+1. Only detect actual ingredients and food items.
+2. Ignore cooking utensils, plates, bowls, fridge shelves, drawers, containers, or packaging itself (unless the content of the packaging is clear, e.g. "greek yogurt" or "mayonnaise").
+3. Group duplicates or multiple instances (e.g. if there are 3 apples, just list "apple" once with the highest confidence).
+4. Be as comprehensive as possible. Look closely for items in jars, shelves, door racks, and produce drawers.
+
+Return the result as a JSON object with a single top-level key "ingredients", containing a list of detected ingredients.
+Example output format:
+{
+  "ingredients": [
+    {"name": "carrot", "confidence": 0.95, "category": "vegetable"},
+    {"name": "milk", "confidence": 0.9, "category": "dairy"},
+    {"name": "mayonnaise", "confidence": 0.8, "category": "packaged"}
+  ]
+}"""
+
+        body = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "inlineData": {
+                                "mimeType": mime_type,
+                                "data": encoded_image,
+                            }
+                        },
+                        {
+                            "text": prompt
+                        }
+                    ]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.2,
+                "responseMimeType": "application/json",
+            }
+        }
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        
+        def make_request():
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(body).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=30) as response:
+                return response.read()
+
+        loop = asyncio.get_event_loop()
+        raw_resp = await loop.run_in_executor(None, make_request)
+        resp_data = json.loads(raw_resp.decode("utf-8"))
+
+        if not isinstance(resp_data, dict):
+            return []
+            
+        candidates = resp_data.get("candidates")
+        if not isinstance(candidates, list) or not candidates:
+            return []
+            
+        parts = candidates[0].get("content", {}).get("parts", [])
+        text_parts = [part.get("text", "") for part in parts if isinstance(part, dict)]
+        if not text_parts:
+            return []
+            
+        gem_text = "\n".join(text_parts)
+        json_text = self._extract_json_from_text(gem_text)
+        payload = json.loads(json_text)
+        
+        ingredients_raw = []
+        if isinstance(payload, dict):
+            ingredients_raw = payload.get("ingredients") or []
+        elif isinstance(payload, list):
+            ingredients_raw = payload
+            
+        detected = []
+        valid_categories = {"vegetable", "fruit", "dairy", "protein", "grain", "beverage", "packaged", "herb", "other"}
+        
+        for item in ingredients_raw:
+            if not isinstance(item, dict):
+                continue
+            # Normalize names and categories to match standard keys
+            raw_name = str(item.get("name") or "").strip()
+            if not raw_name:
+                continue
+            name = normalize_name(raw_name)
+            
+            confidence = 0.75
+            try:
+                confidence = float(item.get("confidence", 0.75))
+            except Exception:
+                pass
+                
+            category = str(item.get("category") or "").strip().lower()
+            if not category or category not in valid_categories:
+                category = categorize(name)
+                
+            detected.append(DetectedIngredient(
+                name=name,
+                confidence=round(confidence, 4),
+                category=category
+            ))
+            
+        return sorted(detected, key=lambda x: (-x.confidence, x.name))
+
+    async def detect_from_upload(self, file: UploadFile) -> DetectionResponse:
+        image_bytes = await file.read()
+        if not image_bytes:
+            raise HTTPException(status_code=400, detail="No image data was uploaded.")
+
+        # Try Gemini Multimodal Vision first when API key is present
+        api_key = get_gemini_api_key()
+        if api_key:
+            try:
+                model = get_gemini_model()
+                # Default content type if none is provided
+                mime = file.content_type or "image/jpeg"
+                if not mime.startswith("image/"):
+                    mime = "image/jpeg"
+                ingredients = await self._detect_with_gemini(image_bytes, mime, api_key, model)
+                if ingredients:
+                    return DetectionResponse(ingredients=ingredients)
+            except Exception as e:
+                # Log Gemini failure and fall back to local YOLO model
+                print(f"Gemini Vision Scan failed, falling back to local YOLO model: {e}")
+                pass
+
+        # Fallback to YOLO model
+        try:
+            import cv2
+            import numpy as np
+        except Exception as error:  # pragma: no cover - dependency guard
+            raise HTTPException(
+                status_code=503,
+                detail="OpenCV dependencies are not installed. Install ai-service requirements.txt to enable scanning.",
+            ) from error
+
+        image_array = np.frombuffer(image_bytes, dtype=np.uint8)
+        image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+        if image is None:
+            raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
+
+        temp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename or "scan.jpg").suffix or ".jpg") as temp_file:
+                temp_path = Path(temp_file.name)
+                cv2.imwrite(str(temp_path), image)
+
+            model = self._load_model()
+            results = model.predict(source=str(temp_path), conf=0.25, verbose=False)
+            ingredients = self._extract_predictions(results)
+            return DetectionResponse(ingredients=ingredients)
+        finally:
+            if temp_path and temp_path.exists():
+                temp_path.unlink(missing_ok=True)
+
+
+
+detection_service = IngredientDetectionService()

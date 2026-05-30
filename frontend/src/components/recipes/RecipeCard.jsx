@@ -1,5 +1,6 @@
-import { Clock, Flame, Heart, Salad, Sparkles } from 'lucide-react';
+import { Clock, Flame, Heart, Salad, Share2, Sparkles, Copy, Mail, MessageCircle, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useMemo, useState } from 'react';
 import ComicButton from '../ui/ComicButton';
 import ComicCard from '../ui/ComicCard';
 
@@ -28,12 +29,56 @@ function getMatchSummary(recipe, pantry) {
 }
 
 export default function RecipeCard({ recipe, pantry, onFavorite, onOpen }) {
-  const match = getMatchSummary(recipe, pantry);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
+  const [copyState, setCopyState] = useState('Copy URL');
+  const shareUrl = window.location.href;
+  const match = useMemo(() => getMatchSummary(recipe, pantry), [recipe, pantry]);
+  const aiMessage = (recipe.ai_message || '').toString();
+  const visibleAiMessage = (aiMessage && !/mealdb/i.test(aiMessage) && !/fetched/i.test(aiMessage)) ? aiMessage : '';
+
+  const shareTargets = useMemo(() => ([
+    {
+      label: 'WhatsApp',
+      icon: MessageCircle,
+      href: `https://wa.me/?text=${encodeURIComponent(shareUrl)}`,
+    },
+    {
+      label: 'Telegram',
+      icon: Send,
+      href: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}`,
+    },
+    {
+      label: 'SMS',
+      icon: MessageCircle,
+      href: `sms:?&body=${encodeURIComponent(shareUrl)}`,
+    },
+    {
+      label: 'Email',
+      icon: Mail,
+      href: `mailto:?subject=${encodeURIComponent(`Recipe: ${recipe.title}`)}&body=${encodeURIComponent(shareUrl)}`,
+    },
+  ]), [recipe.title, shareUrl]);
+
+  async function copyShareUrl(event) {
+    event.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopyState('Copied');
+      window.setTimeout(() => setCopyState('Copy URL'), 1800);
+    } catch (error) {
+      setCopyState('Copy failed');
+      window.setTimeout(() => setCopyState('Copy URL'), 1800);
+    }
+  }
   return (
     <ComicCard
       className={`flex h-full flex-col gap-4 bg-paper ${onOpen ? 'cursor-pointer' : ''}`}
       as={motion.article}
-      onClick={onOpen}
+      onClick={(event) => {
+        setShowSteps((s) => !s);
+        if (onOpen) onOpen(event);
+      }}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -75,27 +120,77 @@ export default function RecipeCard({ recipe, pantry, onFavorite, onOpen }) {
           </div>
         </div>
       ) : null}
-      <ol className="space-y-2 font-body text-sm leading-relaxed">
-        {recipe.instructions.map((step, index) => (
-          <li key={step} className="flex gap-2">
-            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 border-ink bg-butter font-bold">{index + 1}</span>
-            {step}
-          </li>
-        ))}
-      </ol>
-      <div className="mt-auto flex items-center justify-between gap-3">
-        <span className="font-hand text-xl text-cocoa">{recipe.ai_message}</span>
-        <ComicButton
-          variant="yellow"
-          icon={Heart}
-          onClick={(event) => {
-            event.stopPropagation();
-            onFavorite(recipe);
-          }}
-          className="min-h-10 px-3 py-2 text-base"
-        >
-          Save
-        </ComicButton>
+      {showSteps ? (
+        <ol className="space-y-2 font-body text-sm leading-relaxed">
+          {recipe.instructions.map((step, index) => (
+            <li key={step} className="flex gap-2">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 border-ink bg-butter font-bold">{index + 1}</span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      <div className="mt-auto flex flex-col gap-3">
+        <div className="flex items-center justify-end gap-2">
+          <ComicButton
+            variant={shareOpen ? 'yellow' : 'paper'}
+            icon={Share2}
+            onClick={(event) => {
+              event.stopPropagation();
+              setShareOpen((open) => !open);
+            }}
+            className="min-h-10 px-3 py-2 text-base"
+          >
+            {shareOpen ? 'Close' : 'Share'}
+          </ComicButton>
+          <ComicButton
+            variant="yellow"
+            icon={Heart}
+            onClick={(event) => {
+              event.stopPropagation();
+              onFavorite(recipe);
+            }}
+            className="min-h-10 px-3 py-2 text-base"
+          >
+            Save
+          </ComicButton>
+        </div>
+
+        {shareOpen ? (
+          <div
+            className="rounded-2xl border-3 border-ink bg-cream p-3 shadow-sticker flex flex-col gap-2 mt-2"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-doodle text-base font-bold text-cocoa">Share to</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {shareTargets.map((target) => {
+                const Icon = target.icon;
+                return (
+                  <a
+                    key={target.label}
+                    href={target.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 rounded-xl border-2 border-ink bg-paper px-2 py-1.5 font-hand text-lg shadow-sticker transition hover:-translate-y-0.5 hover:bg-butter"
+                  >
+                    <Icon size={18} />
+                    {target.label}
+                  </a>
+                );
+              })}
+              <button
+                type="button"
+                onClick={copyShareUrl}
+                className="col-span-2 flex items-center justify-center gap-2 rounded-xl border-2 border-ink bg-butter px-3 py-1.5 font-hand text-lg shadow-sticker transition hover:-translate-y-0.5 hover:bg-tomato hover:text-white"
+              >
+                <Copy size={18} />
+                {copyState}
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </ComicCard>
   );

@@ -13,8 +13,8 @@ app = FastAPI(
 # CORS must be added before route handlers
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=".*",  # Allow all origins explicitly
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

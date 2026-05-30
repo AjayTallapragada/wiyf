@@ -15,7 +15,8 @@ async def generate_recipes(payload: Optional[RecipeRequest] = None):
     preferences = await store.get_preferences()
     ingredients = payload.ingredients if payload and payload.ingredients else pantry.ingredients
     selected_preferences = payload.preferences if payload else preferences
-    return await recipe_service.generate(ingredients, selected_preferences)
+    exclude_titles = payload.exclude_titles if payload and payload.exclude_titles else []
+    return await recipe_service.generate(ingredients, selected_preferences, exclude_titles)
 
 
 @router.get("/features", response_model=List[FeaturePlaceholder])

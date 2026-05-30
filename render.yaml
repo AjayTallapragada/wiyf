@@ -1,0 +1,39 @@
+services:
+  # 1. Main FastAPI Backend
+  - type: web
+    name: wiyf-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 8080
+    rootDir: backend
+    envVars:
+      - key: WIYF_GEMINI_API_KEY
+        sync: false # Set this securely in the Render dashboard
+      - key: WIYF_GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: WIYF_APP_ENV
+        value: production
+
+  # 2. AI Computer Vision Service (OpenCV + YOLOv8 + Gemini)
+  - type: web
+    name: wiyf-ai-service
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 8081
+    rootDir: ai-service
+    envVars:
+      - key: WIYF_GEMINI_API_KEY
+        sync: false # Set this securely in the Render dashboard
+      - key: WIYF_GEMINI_MODEL
+        value: gemini-2.5-flash
+
+  # 3. Spring Boot Proxy Controller
+  - type: web
+    name: wiyf-backend-spring
+    env: java
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -jar target/backend-spring-0.0.1-SNAPSHOT.jar --server.port=8082
+    rootDir: backend-spring
+    envVars:
+      - key: app.ai-service-url
+        value: https://wiyf-ai-service.onrender.com # Change to your actual deployed AI Service URL if different

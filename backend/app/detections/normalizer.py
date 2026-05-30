@@ -2,6 +2,60 @@ from typing import Dict, Set
 
 from app.models.schemas import Category
 
+YOLO_CLASS_MAP: Dict[str, str] = {
+    "tomato": "tomato",
+    "tomatoes": "tomato",
+    "roma tomato": "tomato",
+    "cherry tomato": "tomato",
+    "potato": "potato",
+    "potatoes": "potato",
+    "onion": "onion",
+    "red onion": "onion",
+    "yellow onion": "onion",
+    "cucumber": "cucumber",
+    "cucumbers": "cucumber",
+    "carrot": "carrot",
+    "carrots": "carrot",
+    "eggplant": "eggplant",
+    "brinjal": "eggplant",
+    "aubergine": "eggplant",
+    "capsicum": "pepper",
+    "bell pepper": "pepper",
+    "pepper": "pepper",
+    "broccoli": "broccoli",
+    "cauliflower": "cauliflower",
+    "cabbage": "cabbage",
+    "lettuce": "lettuce",
+    "spinach": "spinach",
+    "mushroom": "mushroom",
+    "mushrooms": "mushroom",
+    "garlic": "garlic",
+    "ginger": "ginger",
+    "okra": "okra",
+    "lady finger": "okra",
+    "ladies finger": "okra",
+    "egg": "egg",
+    "eggs": "egg",
+    "milk": "milk",
+    "rice": "rice",
+    "bread": "bread",
+    "apple": "apple",
+    "banana": "banana",
+    "orange": "orange",
+    "lemon": "lemon",
+    "lime": "lime",
+    "grape": "grape",
+    "grapes": "grape",
+    "chili": "chili",
+    "chilli": "chili",
+    "green chilli": "chili",
+    "red chilli": "chili",
+    "spring onion": "spring onion",
+    "scallion": "spring onion",
+    "coriander": "coriander",
+    "cilantro": "coriander",
+}
+
 ALIASES = {
     "roma tomato": "tomato",
     "cherry tomato": "tomato",
@@ -106,14 +160,20 @@ CATEGORY_KEYWORDS: Dict[Category, Set[str]] = {
 INGREDIENT_KEYWORDS = sorted(
     {keyword for keywords in CATEGORY_KEYWORDS.values() for keyword in keywords if keyword}
     | set(ALIASES.values())
+    | set(YOLO_CLASS_MAP.values())
     | {"soy bean", "ginger", "garlic"},
     key=len,
     reverse=True,
 )
 
 
-def normalize_name(label: str) -> str:
+def normalize_yolo_label(label: str) -> str:
     clean = " ".join(label.lower().replace("_", " ").replace("-", " ").replace(",", " ").split())
+    return YOLO_CLASS_MAP.get(clean, clean)
+
+
+def normalize_name(label: str) -> str:
+    clean = normalize_yolo_label(label)
     # removeprefix is Python 3.9+; use startswith slicing for 3.8 compatibility
     prefixes = ("fresh ", "ripe ", "raw ")
     stripped = True

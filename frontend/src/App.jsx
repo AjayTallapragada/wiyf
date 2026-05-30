@@ -62,7 +62,6 @@ export default function App() {
       const raw = localStorage.getItem('wiyf.scanState');
       if (raw) {
         const s = JSON.parse(raw);
-        if (s.scanPreview) setScanPreview(s.scanPreview);
         if (typeof s.scanProgress === 'number') setScanProgress(s.scanProgress);
         if (s.scanResult) setScanResult(s.scanResult);
         if (s.scanError) setScanError(s.scanError);
@@ -76,12 +75,39 @@ export default function App() {
     try {
       localStorage.setItem(
         'wiyf.scanState',
-        JSON.stringify({ scanPreview, scanProgress, scanResult, scanError, scanLoading })
+        JSON.stringify({ scanProgress, scanResult, scanError, scanLoading })
       );
     } catch (err) {
       // ignore
     }
-  }, [scanPreview, scanProgress, scanResult, scanError, scanLoading]);
+  }, [scanProgress, scanResult, scanError, scanLoading]);
+
+  // Parse shared recipe from URL query parameter on startup
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const recipeParam = params.get('recipe');
+      if (recipeParam) {
+        const decodedJson = decodeURIComponent(escape(atob(recipeParam)));
+        const recipe = JSON.parse(decodedJson);
+        setSelectedRecipe(recipe);
+        setPage('recipes');
+      }
+    } catch (err) {
+      console.warn('Failed to parse recipe from URL query parameter:', err);
+    }
+  }, []);
+
+  // Clean up URL query parameters when selectedRecipe is cleared
+  useEffect(() => {
+    if (!selectedRecipe) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('recipe')) {
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    }
+  }, [selectedRecipe]);
 
   const showBootScreen = !bootLoaded || !bootDelayElapsed;
 

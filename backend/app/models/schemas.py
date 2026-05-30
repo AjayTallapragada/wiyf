@@ -19,6 +19,12 @@ class Ingredient(BaseModel):
     raw_label: Optional[str] = None
 
 
+class DetectedIngredient(BaseModel):
+    name: str
+    confidence: float = Field(ge=0, le=1)
+    category: Category = "other"
+
+
 class PantryInventory(BaseModel):
     ingredients: List[Ingredient] = Field(default_factory=list)
     updated_at: Optional[str] = None
@@ -73,6 +79,7 @@ class Recipe(BaseModel):
 class RecipeRequest(BaseModel):
     ingredients: List[Ingredient] = Field(default_factory=list)
     preferences: Preferences = Field(default_factory=Preferences)
+    exclude_titles: List[str] = Field(default_factory=list)
 
 
 class RecipeResponse(BaseModel):
@@ -82,10 +89,7 @@ class RecipeResponse(BaseModel):
 
 
 class DetectionResponse(BaseModel):
-    ingredients: List[Ingredient]
-    ocr_text: List[str] = Field(default_factory=list)
-    provider_status: Dict[str, str] = Field(default_factory=dict)
-    message: str
+    ingredients: List[DetectedIngredient] = Field(default_factory=list)
 
 
 class FavoriteRecipe(BaseModel):

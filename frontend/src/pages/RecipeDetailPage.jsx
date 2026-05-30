@@ -1,10 +1,12 @@
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Heart, ListChecks, Pause, Play, RotateCcw, Timer } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Heart, ListChecks, Pause, Play, RotateCcw, Timer, Mail, MessageCircle, Copy, Share2, Send } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import ComicButton from '../components/ui/ComicButton';
 import ComicCard from '../components/ui/ComicCard';
 import AiChef from '../components/ai/AiChef';
 
 export default function RecipeDetailPage({ recipe, onBack, onFavorite }) {
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copyState, setCopyState] = useState('Copy URL');
   const checklist = useMemo(() => {
     const fromFullList = recipe.ingredients?.map((item) => ({
       key: `${item.name}-${item.quantity}`,
@@ -15,7 +17,7 @@ export default function RecipeDetailPage({ recipe, onBack, onFavorite }) {
   }, [recipe]);
   const [checked, setChecked] = useState({});
   const [currentStep, setCurrentStep] = useState(0);
-  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerSeconds, setTimerSeconds] = useState(() => (recipe.cooking_time || 0) * 60);
   const [timerRunning, setTimerRunning] = useState(false);
   const [customMinutes, setCustomMinutes] = useState('');
   const completed = checklist.filter((item) => checked[item.key]).length;
@@ -49,11 +51,101 @@ export default function RecipeDetailPage({ recipe, onBack, onFavorite }) {
     if (minutes > 0) setCustomMinutes('');
   }
 
+  const shareUrl = useMemo(() => {
+    try {
+      const recipeJson = JSON.stringify(recipe);
+      const encoded = btoa(unescape(encodeURIComponent(recipeJson)));
+      return `${window.location.origin}/?recipe=${encoded}`;
+    } catch (e) {
+      return window.location.href;
+    }
+  }, [recipe]);
+
+  const shareTargets = [
+    {
+      label: 'WhatsApp',
+      icon: MessageCircle,
+      href: `https://wa.me/?text=${encodeURIComponent(shareUrl)}`,
+    },
+    {
+      label: 'Telegram',
+      icon: Send,
+      href: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}`,
+    },
+    {
+      label: 'SMS',
+      icon: MessageCircle,
+      href: `sms:?&body=${encodeURIComponent(shareUrl)}`,
+    },
+    {
+      label: 'Email',
+      icon: Mail,
+      href: `mailto:?subject=${encodeURIComponent(`Recipe: ${recipe.title}`)}&body=${encodeURIComponent(shareUrl)}`,
+    },
+  ];
+
+  async function copyShareUrl() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopyState('Copied');
+      window.setTimeout(() => setCopyState('Copy URL'), 1800);
+    } catch (error) {
+      setCopyState('Copy failed');
+      window.setTimeout(() => setCopyState('Copy URL'), 1800);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ComicButton variant="paper" icon={ArrowLeft} onClick={onBack}>Back</ComicButton>
-        <ComicButton variant="yellow" icon={Heart} onClick={() => onFavorite(recipe)}>Save</ComicButton>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <ComicButton variant="paper" icon={Share2} onClick={() => setShareOpen((open) => !open)}>
+              Share
+            </ComicButton>
+            {shareOpen ? (
+              <div className="absolute right-0 top-full z-20 mt-3 w-72 rounded-[1.5rem] border-3 border-ink bg-paper p-3 shadow-sticker">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="font-doodle text-lg font-bold text-cocoa">Share this recipe</p>
+                  <button
+                    type="button"
+                    onClick={() => setShareOpen(false)}
+                    className="rounded-full border-2 border-ink bg-cream px-2 py-1 font-doodle text-sm font-bold"
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="grid gap-2">
+                  {shareTargets.map((target) => {
+                    const Icon = target.icon;
+                    return (
+                      <a
+                        key={target.label}
+                        href={target.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 rounded-2xl border-2 border-ink bg-cream px-3 py-2 font-hand text-lg shadow-sticker transition hover:-translate-y-0.5"
+                      >
+                        <Icon size={20} />
+                        {target.label}
+                      </a>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={copyShareUrl}
+                    className="flex items-center gap-3 rounded-2xl border-2 border-ink bg-butter px-3 py-2 font-hand text-lg shadow-sticker transition hover:-translate-y-0.5"
+                  >
+                    <Copy size={20} />
+                    {copyState}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+          <ComicButton variant="yellow" icon={Heart} onClick={() => onFavorite(recipe)}>Save</ComicButton>
+        </div>
       </div>
       <AiChef message={completed === checklist.length ? 'Cook mode is ready. Move step by step and use timers as needed.' : 'Check ingredients as you prep, then cook one step at a time.'} />
       <ComicCard className="bg-cream">

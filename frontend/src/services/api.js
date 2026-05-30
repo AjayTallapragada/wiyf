@@ -5,14 +5,28 @@ export const api = axios.create({
   timeout: 300000,
 });
 
+export const detectionApi = axios.create({
+  baseURL: import.meta.env.VITE_AI_API_BASE_URL || 'http://127.0.0.1:8082/api',
+  timeout: 300000,
+});
+
 export async function detectIngredients(file, onUploadProgress) {
   const formData = new FormData();
   formData.append('file', file);
-  const { data } = await api.post('/detect', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-    onUploadProgress,
-  });
-  return data;
+  try {
+    const { data } = await detectionApi.post('/detect', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
+    });
+    return data;
+  } catch (error) {
+    console.warn('Dedicated AI service proxy failed/unavailable. Falling back to main app backend detection:', error);
+    const { data } = await api.post('/detect', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
+    });
+    return data;
+  }
 }
 
 export const getPantry = () => api.get('/pantry').then((res) => res.data);

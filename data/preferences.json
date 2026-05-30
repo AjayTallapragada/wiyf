@@ -1,0 +1,12 @@
+{
+  "diet": "vegetarian",
+  "high_protein": false,
+  "low_oil": false,
+  "low_calorie": false,
+  "muscle_gain": false,
+  "weight_loss": false,
+  "cuisine": "South Indian",
+  "cooking_time": 15,
+  "servings": 1,
+  "allergies": []
+}
