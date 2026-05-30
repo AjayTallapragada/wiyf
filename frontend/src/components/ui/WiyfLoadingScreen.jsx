@@ -21,10 +21,8 @@ export default function WiyfLoadingScreen() {
       <div className="relative flex flex-col items-center justify-center scale-90 sm:scale-100">
         {/* SVG Liquid Fill Loading Text */}
         <svg
-          width="600"
-          height="220"
           viewBox="0 0 600 220"
-          className="drop-shadow-[6px_6px_0px_#211a16] select-none"
+          className="w-full max-w-[450px] sm:max-w-[600px] h-auto drop-shadow-[6px_6px_0px_#211a16] select-none px-4"
         >
           <defs>
             {/* The Text Clip Path */}

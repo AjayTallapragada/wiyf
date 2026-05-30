@@ -164,7 +164,7 @@ export default function RecipeDetailPage({ recipe, onBack, onFavorite }) {
       <ComicCard className="bg-cream">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-display text-6xl leading-none text-tomato">{recipe.title}</h1>
+            <h1 className="font-display text-4xl sm:text-6xl leading-none text-tomato">{recipe.title}</h1>
             <p className="mt-2 max-w-2xl font-hand text-2xl text-cocoa">{recipe.description}</p>
           </div>
           <div className="rounded-2xl border-3 border-ink bg-paper px-4 py-3 text-center font-doodle shadow-sticker">
@@ -176,12 +176,12 @@ export default function RecipeDetailPage({ recipe, onBack, onFavorite }) {
       <div className="grid gap-6 lg:grid-cols-[.85fr_1.15fr]">
         <ComicCard>
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="font-display text-5xl text-leaf">Checklist</h2>
+            <h2 className="font-display text-4xl sm:text-5xl text-leaf">Checklist</h2>
             <span className="rounded-full border-2 border-ink bg-butter px-3 py-1 font-doodle font-bold">{completed}/{checklist.length}</span>
           </div>
           <div className="space-y-3">
             {checklist.map((item) => (
-              <label key={item.key} className={`flex cursor-pointer items-center gap-3 rounded-2xl border-3 border-ink px-4 py-3 font-hand text-2xl shadow-sticker transition ${checked[item.key] ? 'bg-leaf/20 text-cocoa' : 'bg-paper'}`}>
+              <label key={item.key} className={`flex cursor-pointer items-center gap-3 rounded-2xl border-3 border-ink px-4 py-3 font-hand text-xl sm:text-2xl shadow-sticker transition ${checked[item.key] ? 'bg-leaf/20 text-cocoa' : 'bg-paper'}`}>
                 <input
                   type="checkbox"
                   className="h-6 w-6 accent-leaf"
@@ -203,13 +203,13 @@ export default function RecipeDetailPage({ recipe, onBack, onFavorite }) {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
             <ListChecks size={34} />
-              <h2 className="font-display text-5xl text-tomato">Cook Mode</h2>
+              <h2 className="font-display text-4xl sm:text-5xl text-tomato">Cook Mode</h2>
             </div>
             <span className="rounded-full border-2 border-ink bg-butter px-3 py-1 font-doodle font-bold">Step {Math.min(currentStep + 1, totalSteps)}/{totalSteps}</span>
           </div>
           <div className="rounded-3xl border-3 border-ink bg-paper p-5 shadow-sticker">
             <p className="font-doodle text-lg font-bold uppercase text-cocoa">Current step</p>
-            <p className="mt-2 font-hand text-3xl leading-snug">{activeInstruction}</p>
+            <p className="mt-2 font-hand text-2xl sm:text-3xl leading-snug">{activeInstruction}</p>
             <div className="mt-5 flex flex-wrap gap-3">
               <ComicButton
                 variant="paper"
@@ -293,7 +293,7 @@ export default function RecipeDetailPage({ recipe, onBack, onFavorite }) {
             {recipe.instructions.map((step, index) => (
               <li key={`${index}-${step}`} className={`flex gap-4 rounded-2xl border-3 border-ink p-4 shadow-sticker transition ${index === currentStep ? 'bg-butter' : 'bg-paper'}`}>
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-3 border-ink bg-butter font-display text-3xl">{index + 1}</span>
-                <span className="font-hand text-2xl leading-snug">{step}</span>
+                <span className="font-hand text-xl sm:text-2xl leading-snug">{step}</span>
               </li>
             ))}
           </ol>

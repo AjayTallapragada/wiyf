@@ -22,7 +22,7 @@ export default function MealPlannerPage({ pantry, preferences }) {
     <div className="space-y-6">
       <AiChef message="Weekly planning, pantry first, shopping list second." />
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-6xl text-tomato">Meal Planner</h1>
+        <h1 className="font-display text-4xl sm:text-6xl text-tomato">Meal Planner</h1>
         <ComicButton icon={loading ? Loader2 : CalendarDays} onClick={createPlan}>{loading ? 'Planning' : 'Generate Week'}</ComicButton>
       </div>
       {plan ? (

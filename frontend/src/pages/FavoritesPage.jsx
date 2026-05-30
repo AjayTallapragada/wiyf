@@ -19,7 +19,7 @@ export default function FavoritesPage() {
   return (
     <div className="space-y-6">
       <AiChef message="Saved recipes live here for repeat dinner victories." />
-      <h1 className="font-display text-6xl text-tomato">Favorites</h1>
+      <h1 className="font-display text-4xl sm:text-6xl text-tomato">Favorites</h1>
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {favorites.map((favorite) => (
           <div key={favorite.recipe.id} className="space-y-3">

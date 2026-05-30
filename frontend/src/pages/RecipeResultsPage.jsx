@@ -182,7 +182,7 @@ export default function RecipeResultsPage({ pantry, preferences, recipes, setRec
         messages={chefMessages}
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-6xl text-tomato">Recipe Cards</h1>
+        <h1 className="font-display text-4xl sm:text-6xl text-tomato">Recipe Cards</h1>
         <div className="flex items-center gap-3">
           <ComicButton icon={loading ? Loader2 : Sparkles} onClick={createRecipes}>
             {loading ? 'Cooking Ideas' : 'Generate Recipes'}
@@ -236,7 +236,7 @@ export default function RecipeResultsPage({ pantry, preferences, recipes, setRec
           <button
             onClick={scrollLeft}
             disabled={!canScrollLeft}
-            className={`absolute left-2 md:left-0 md:-translate-x-1/2 top-1/2 z-10 -translate-y-1/2 rounded-full border-3 border-ink p-3 shadow-sticker transition-all duration-200 flex items-center justify-center ${
+            className={`hidden md:flex absolute left-0 -translate-x-1/2 top-1/2 z-10 -translate-y-1/2 rounded-full border-3 border-ink p-3 shadow-sticker transition-all duration-200 items-center justify-center ${
               canScrollLeft
                 ? 'bg-butter text-ink hover:bg-tomato hover:text-white cursor-pointer active:scale-95'
                 : 'bg-paper text-ink/30 opacity-50 cursor-not-allowed pointer-events-none'
@@ -248,7 +248,7 @@ export default function RecipeResultsPage({ pantry, preferences, recipes, setRec
           <button
             onClick={handleNextClick}
             disabled={loadingMore}
-            className={`absolute right-2 md:right-0 md:translate-x-1/2 top-1/2 z-10 -translate-y-1/2 rounded-full border-3 border-ink p-3 shadow-sticker transition-all duration-200 flex items-center justify-center bg-butter text-ink hover:bg-tomato hover:text-white ${
+            className={`hidden md:flex absolute right-0 translate-x-1/2 top-1/2 z-10 -translate-y-1/2 rounded-full border-3 border-ink p-3 shadow-sticker transition-all duration-200 items-center justify-center bg-butter text-ink hover:bg-tomato hover:text-white ${
               loadingMore
                 ? 'cursor-not-allowed opacity-80'
                 : 'cursor-pointer active:scale-95'

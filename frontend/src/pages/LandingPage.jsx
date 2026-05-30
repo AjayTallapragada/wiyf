@@ -44,13 +44,13 @@ export default function LandingPage({ setPage }) {
         </motion.div>
         <motion.h1 
           variants={itemVariants}
-          className="max-w-3xl font-display text-7xl leading-none tracking-normal text-tomato sm:text-8xl"
+          className="max-w-3xl font-display text-5xl leading-none tracking-normal text-tomato sm:text-7xl md:text-8xl"
         >
           What's In Your Fridge?
         </motion.h1>
         <motion.p 
           variants={itemVariants}
-          className="max-w-2xl font-hand text-3xl leading-tight text-cocoa"
+          className="max-w-2xl font-hand text-2xl sm:text-3xl leading-tight text-cocoa"
         >
           Snap your fridge, pop the ingredients into a smart pantry, and get cozy recipes that match your goals.
         </motion.p>
@@ -65,9 +65,9 @@ export default function LandingPage({ setPage }) {
       </motion.div>
 
       <motion.div style={{ y, opacity }}>
-        <ComicCard className="relative min-h-[430px] overflow-hidden bg-cream">
+        <ComicCard className="relative min-h-[320px] sm:min-h-[430px] overflow-hidden bg-cream">
           <motion.div 
-            className="absolute left-6 top-6 rounded-full border-3 border-ink bg-butter px-4 py-2 font-display text-4xl shadow-sticker"
+            className="absolute left-6 top-6 rounded-full border-3 border-ink bg-butter px-3 py-1 sm:px-4 sm:py-2 font-display text-2xl sm:text-4xl shadow-sticker"
             animate={{ rotate: [0, 5, -5, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
@@ -88,7 +88,7 @@ export default function LandingPage({ setPage }) {
                 ease: 'easeInOut',
                 delay: index * 0.45, // staggered, regular intervals
               }}
-              className="absolute rounded-[28px] border-3 border-ink bg-paper px-5 py-4 font-hand text-3xl shadow-sticker"
+              className="absolute rounded-[28px] border-3 border-ink bg-paper px-3 py-2 sm:px-5 sm:py-4 font-hand text-xl sm:text-3xl shadow-sticker"
               style={{ left: `${16 + index * 18}%`, top: `${22 + (index % 2) * 35}%` }}
               whileHover={{ scale: 1.06 }}
             >
