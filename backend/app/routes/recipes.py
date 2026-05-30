@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter
 
 from app.inventory.json_store import store
-from app.models.schemas import FeaturePlaceholder, RecipeRequest, RecipeResponse
+from app.models.schemas import FeaturePlaceholder, Recipe, RecipeRequest, RecipeResponse
 from app.services.recipe_service import recipe_service
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
@@ -31,3 +31,14 @@ async def feature_placeholders():
         FeaturePlaceholder(name="push notifications"),
         FeaturePlaceholder(name="offline PWA support", status="prototype"),
     ]
+
+
+@router.post("/share", response_model=dict)
+async def share_recipe(recipe: Recipe):
+    recipe_id = await store.save_shared_recipe(recipe)
+    return {"id": recipe_id}
+
+
+@router.get("/share/{recipe_id}", response_model=Recipe)
+async def get_shared_recipe(recipe_id: str):
+    return await store.get_shared_recipe(recipe_id)

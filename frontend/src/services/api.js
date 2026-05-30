@@ -45,3 +45,5 @@ export const getFavorites = () => api.get('/favorites').then((res) => res.data);
 export const saveFavorite = (recipe) => api.post('/favorites', recipe).then((res) => res.data);
 export const removeFavorite = (id) => api.delete(`/favorites/${id}`).then((res) => res.data);
 export const generateMealPlan = (payload) => api.post('/meal-plan/generate', payload).then((res) => res.data);
+export const shareRecipe = (recipe) => api.post('/recipes/share', recipe).then((res) => res.data);
+export const getSharedRecipe = (id) => api.get(`/recipes/share/${id}`).then((res) => res.data);

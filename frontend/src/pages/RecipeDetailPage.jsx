@@ -51,7 +51,20 @@ export default function RecipeDetailPage({ recipe, onBack, onFavorite }) {
     if (minutes > 0) setCustomMinutes('');
   }
 
+  const [sharedId, setSharedId] = useState(null);
+
+  useEffect(() => {
+    import('../services/api').then(({ shareRecipe }) => {
+      shareRecipe(recipe)
+        .then((res) => setSharedId(res.id))
+        .catch((err) => console.warn('Failed to pre-register recipe for sharing:', err));
+    });
+  }, [recipe]);
+
   const shareUrl = useMemo(() => {
+    if (sharedId) {
+      return `${window.location.origin}/recipe/${sharedId}`;
+    }
     try {
       const recipeJson = JSON.stringify(recipe);
       const encoded = btoa(unescape(encodeURIComponent(recipeJson)));
@@ -59,7 +72,7 @@ export default function RecipeDetailPage({ recipe, onBack, onFavorite }) {
     } catch (e) {
       return window.location.href;
     }
-  }, [recipe]);
+  }, [recipe, sharedId]);
 
   const shareTargets = [
     {

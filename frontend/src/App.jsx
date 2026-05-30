@@ -82,29 +82,51 @@ export default function App() {
     }
   }, [scanProgress, scanResult, scanError, scanLoading]);
 
-  // Parse shared recipe from URL query parameter on startup
+  // Parse shared recipe from URL path or query parameter on startup
   useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const recipeParam = params.get('recipe');
-      if (recipeParam) {
-        const decodedJson = decodeURIComponent(escape(atob(recipeParam)));
-        const recipe = JSON.parse(decodedJson);
-        setSelectedRecipe(recipe);
-        setPage('recipes');
+    const checkSharedRecipe = async () => {
+      // 1. Check path (e.g., /recipe/carrot-halwa-1234)
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/recipe/')) {
+        const recipeId = pathname.substring(8);
+        if (recipeId) {
+          try {
+            const { getSharedRecipe } = await import('./services/api');
+            const recipe = await getSharedRecipe(recipeId);
+            setSelectedRecipe(recipe);
+            setPage('recipes');
+            return;
+          } catch (err) {
+            console.warn('Failed to fetch shared recipe from backend:', err);
+          }
+        }
       }
-    } catch (err) {
-      console.warn('Failed to parse recipe from URL query parameter:', err);
-    }
+
+      // 2. Fallback to query parameter
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const recipeParam = params.get('recipe');
+        if (recipeParam) {
+          const decodedJson = decodeURIComponent(escape(atob(recipeParam)));
+          const recipe = JSON.parse(decodedJson);
+          setSelectedRecipe(recipe);
+          setPage('recipes');
+        }
+      } catch (err) {
+        console.warn('Failed to parse recipe from URL query parameter:', err);
+      }
+    };
+
+    checkSharedRecipe();
   }, []);
 
-  // Clean up URL query parameters when selectedRecipe is cleared
+  // Clean up URL path and query parameters when selectedRecipe is cleared
   useEffect(() => {
     if (!selectedRecipe) {
+      const pathname = window.location.pathname;
       const params = new URLSearchParams(window.location.search);
-      if (params.has('recipe')) {
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
+      if (pathname.startsWith('/recipe/') || params.has('recipe')) {
+        window.history.replaceState({}, document.title, '/');
       }
     }
   }, [selectedRecipe]);
