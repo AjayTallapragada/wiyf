@@ -1,14 +1,10 @@
-import tempfile
 import base64
 import json
 import urllib.request
 import urllib.error
 import asyncio
 import re
-from pathlib import Path
-from threading import Lock
-from typing import Dict, List, Optional
-
+from typing import List
 from fastapi import HTTPException, UploadFile
 
 from app.detections.normalizer import categorize, normalize_name
@@ -17,82 +13,6 @@ from app.utils.config import settings
 
 
 class IngredientDetectionService:
-    def __init__(self):
-        self._model = None
-        self._model_lock = Lock()
-        self._model_path = self._resolve_model_path()
-
-    def _resolve_model_path(self) -> Path:
-        candidates = [
-            Path(__file__).resolve().parents[3] / "model_cache" / "huggingface" / "ultralytics" / "best.pt",
-            Path(__file__).resolve().parents[2] / "third_party" / "Vegetable_Classification_And_Detection" / "best.pt",
-        ]
-        for candidate in candidates:
-            if candidate.exists():
-                return candidate
-        return candidates[0]
-
-    def _load_model(self):
-        if self._model is not None:
-            return self._model
-
-        with self._model_lock:
-            if self._model is not None:
-                return self._model
-
-            try:
-                from ultralytics import YOLO
-            except Exception as error:  # pragma: no cover - dependency guard
-                raise HTTPException(
-                    status_code=503,
-                    detail="YOLOv8 dependencies are not installed. Install backend requirements-ai.txt to enable scanning.",
-                ) from error
-
-            if not self._model_path.exists():
-                raise HTTPException(
-                    status_code=503,
-                    detail=f"YOLO model file not found at {self._model_path}.",
-                )
-
-            self._model = YOLO(str(self._model_path))
-            return self._model
-
-    @staticmethod
-    def _normalize_file_name(filename: Optional[str]) -> str:
-        if not filename:
-            return "scan.jpg"
-        suffix = Path(filename).suffix.lower()
-        return f"scan{suffix or '.jpg'}"
-
-    @staticmethod
-    def _extract_predictions(results) -> List[DetectedIngredient]:
-        detections: Dict[str, DetectedIngredient] = {}
-        for result in results:
-            class_names = getattr(result, "names", {}) or {}
-            boxes = getattr(result, "boxes", None)
-            if boxes is None:
-                continue
-
-            for box in boxes:
-                confidence = float(box.conf.item()) if hasattr(box.conf, "item") else float(box.conf)
-                if confidence < 0.25:
-                    continue
-
-                class_id = int(box.cls.item()) if hasattr(box.cls, "item") else int(box.cls)
-                label = class_names.get(class_id, str(class_id))
-                name = normalize_name(str(label))
-                category = categorize(name)
-
-                existing = detections.get(name)
-                if existing is None or confidence > existing.confidence:
-                    detections[name] = DetectedIngredient(
-                        name=name,
-                        confidence=round(confidence, 4),
-                        category=category,
-                    )
-
-        return sorted(detections.values(), key=lambda item: (-item.confidence, item.name))
-
     def _extract_json_from_text(self, text: str) -> str:
         """Try to find the first JSON object or array in `text` and return it as a string."""
         if not text:
@@ -242,50 +162,24 @@ Example output format:
         if not image_bytes:
             raise HTTPException(status_code=400, detail="No image data was uploaded.")
 
-        # Try Gemini Multimodal Vision first when API key is present
-        if settings.gemini_api_key:
-            try:
-                model = settings.gemini_model or "gemini-2.5-flash"
-                mime = file.content_type or "image/jpeg"
-                if not mime.startswith("image/"):
-                    mime = "image/jpeg"
-                ingredients = await self._detect_with_gemini(image_bytes, mime, settings.gemini_api_key, model)
-                if ingredients:
-                    return DetectionResponse(ingredients=ingredients)
-            except Exception as e:
-                # Log Gemini failure and fall back to local YOLO model
-                print(f"Gemini Vision Scan failed, falling back to local YOLO model: {e}")
-                pass
-
-        # Fallback to YOLO model
-        try:
-            import cv2
-            import numpy as np
-        except Exception as error:  # pragma: no cover - dependency guard
+        if not settings.gemini_api_key:
             raise HTTPException(
-                status_code=503,
-                detail="OpenCV dependencies are not installed. Install backend requirements-ai.txt to enable scanning.",
-            ) from error
+                status_code=400,
+                detail="Gemini API Key is missing. Please set the WIYF_GEMINI_API_KEY environment variable to use image scanning.",
+            )
 
-        image_array = np.frombuffer(image_bytes, dtype=np.uint8)
-        image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-        if image is None:
-            raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
-
-        temp_path = None
         try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=Path(self._normalize_file_name(file.filename)).suffix) as temp_file:
-                temp_path = Path(temp_file.name)
-                cv2.imwrite(str(temp_path), image)
-
-            model = self._load_model()
-            results = model.predict(source=str(temp_path), conf=0.25, verbose=False)
-            ingredients = self._extract_predictions(results)
+            model = settings.gemini_model or "gemini-2.5-flash"
+            mime = file.content_type or "image/jpeg"
+            if not mime.startswith("image/"):
+                mime = "image/jpeg"
+            ingredients = await self._detect_with_gemini(image_bytes, mime, settings.gemini_api_key, model)
             return DetectionResponse(ingredients=ingredients)
-        finally:
-            if temp_path and temp_path.exists():
-                temp_path.unlink(missing_ok=True)
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Gemini Vision Scan failed: {str(e)}",
+            )
 
 
 detection_service = IngredientDetectionService()
-
