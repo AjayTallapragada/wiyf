@@ -121,7 +121,7 @@ export default function WiyfLoadingScreen() {
           animation: waveHorizontal 2.2s linear infinite;
         }
         .wave-y {
-          animation: waveVertical 7.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          animation: waveVertical 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
       `}</style>
     </motion.div>

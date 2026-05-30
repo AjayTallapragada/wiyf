@@ -10,7 +10,7 @@ import PreferencesPage from './pages/PreferencesPage';
 import RecipeResultsPage from './pages/RecipeResultsPage';
 import ScanFridgePage from './pages/ScanFridgePage';
 
-const BOOT_DURATION_MS = 14000 / 1.25;
+const BOOT_DURATION_MS = 3000;
 
 export default function App() {
   const [page, setPage] = useState('home');
