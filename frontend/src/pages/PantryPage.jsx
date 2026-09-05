@@ -3,11 +3,13 @@ import { useEffect, useState } from 'react';
 import AiChef from '../components/ai/AiChef';
 import ComicButton from '../components/ui/ComicButton';
 import ComicCard from '../components/ui/ComicCard';
+import { useAppState } from '../context/AppStateContext';
 import IngredientBadge from '../components/ui/IngredientBadge';
 import { addIngredient, deleteIngredient, getPantry } from '../services/api';
 import { categories } from '../utils/categories';
 
-export default function PantryPage({ pantry, setPantry, setPage }) {
+export default function PantryPage() {
+  const { pantry, setPantry, setPage } = useAppState();
   const [form, setForm] = useState({ name: '', quantity: 1, unit: 'item', category: 'other' });
 
   useEffect(() => {

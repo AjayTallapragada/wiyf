@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import AiChef from '../components/ai/AiChef';
 import ComicButton from '../components/ui/ComicButton';
 import ComicCard from '../components/ui/ComicCard';
+import { useAppState } from '../context/AppStateContext';
 import IngredientBadge from '../components/ui/IngredientBadge';
 import { detectIngredients, generateRecipes, getPantry, savePantry } from '../services/api';
 
@@ -56,7 +57,27 @@ function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.85) 
   });
 }
 
-export default function ScanFridgePage({ pantry, setPantry, preferences, setRecipes, setSelectedRecipe, setPage, scanFile, setScanFile, scanPreview, setScanPreview, scanProgress, setScanProgress, scanResult, setScanResult, scanError, setScanError, scanLoading, setScanLoading }) {
+export default function ScanFridgePage() {
+  const {
+    pantry,
+    setPantry,
+    preferences,
+    setRecipes,
+    setSelectedRecipe,
+    setPage,
+    scanFile,
+    setScanFile,
+    scanPreview,
+    setScanPreview,
+    scanProgress,
+    setScanProgress,
+    scanResult,
+    setScanResult,
+    scanError,
+    setScanError,
+    scanLoading,
+    setScanLoading,
+  } = useAppState();
   const inputRef = useRef(null);
   const cameraRef = useRef(null);
   const videoRef = useRef(null);

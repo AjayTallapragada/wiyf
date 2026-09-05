@@ -1,14 +1,34 @@
-import { Camera, CalendarDays, Heart, Home, ListChecks, Sparkles, Utensils } from 'lucide-react';
+import { CalendarDays, Camera, Heart, Home, ListChecks, MessageCircle, Sparkles, Utensils } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { useAppState } from '../../context/AppStateContext';
 
 const links = [
   { id: 'home', label: 'Home', icon: Home },
   { id: 'scan', label: 'Scan', icon: Camera },
   { id: 'pantry', label: 'Pantry', icon: ListChecks },
   { id: 'recipes', label: 'Recipes', icon: Utensils },
+  { id: 'swiper', label: 'Swiper', icon: Sparkles },
   { id: 'favorites', label: 'Faves', icon: Heart },
+  { id: 'planner', label: 'Planner', icon: CalendarDays },
+  { id: 'community', label: 'Community', icon: MessageCircle },
 ];
 
-export default function Navbar({ page, setPage }) {
+export default function Navbar() {
+  const location = useLocation();
+  const { setPage } = useAppState();
+  const pathToPage = {
+    '/': 'home',
+    '/scan': 'scan',
+    '/pantry': 'pantry',
+    '/preferences': 'preferences',
+    '/recipes': 'recipes',
+    '/favorites': 'favorites',
+    '/planner': 'planner',
+    '/swiper': 'swiper',
+    '/community': 'community',
+  };
+  const page = location.pathname.startsWith('/recipe/') ? 'swiper' : (pathToPage[location.pathname] || 'home');
+
   return (
     <nav className="sticky top-0 z-30 border-b-3 border-ink bg-cream/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">

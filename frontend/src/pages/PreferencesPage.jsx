@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import AiChef from '../components/ai/AiChef';
 import ComicButton from '../components/ui/ComicButton';
 import ComicCard from '../components/ui/ComicCard';
+import { useAppState } from '../context/AppStateContext';
 import { getPreferences, savePreferences } from '../services/api';
 
 const toggles = [
@@ -25,7 +26,8 @@ function normalizeAllergy(value) {
   return value.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-export default function PreferencesPage({ preferences, setPreferences, setPage, setRecipes }) {
+export default function PreferencesPage() {
+  const { preferences, setPreferences, setPage, setRecipes, showNotification } = useAppState();
   const [allergyInput, setAllergyInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -73,6 +75,7 @@ export default function PreferencesPage({ preferences, setPreferences, setPage, 
       const data = await savePreferences(normalized);
       setPreferences(data);
       if (nextPage === 'recipes') setRecipes?.([]);
+      showNotification('Preferences saved.', 'success');
       setPage(nextPage);
     } catch (error) {
       setSaveError('Could not save preferences. Please try again.');

@@ -1,19 +1,37 @@
-import { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import PageShell from './components/layout/PageShell';
+import ToastStack from './components/ui/ToastStack';
 import WiyfLoadingScreen from './components/ui/WiyfLoadingScreen';
+import { AppStateContext } from './context/AppStateContext';
 import FavoritesPage from './pages/FavoritesPage';
+import CommunityPage from './pages/CommunityPage';
 import LandingPage from './pages/LandingPage';
 import MealPlannerPage from './pages/MealPlannerPage';
 import PantryPage from './pages/PantryPage';
 import PreferencesPage from './pages/PreferencesPage';
+import RecipeDetailRoutePage from './pages/RecipeDetailRoutePage';
 import RecipeResultsPage from './pages/RecipeResultsPage';
 import ScanFridgePage from './pages/ScanFridgePage';
-
+import SwiperPage from './pages/SwiperPage';
 const BOOT_DURATION_MS = 3000;
 
+function AppLayout() {
+  const location = useLocation();
+
+  return (
+    <PageShell>
+      <AnimatePresence mode="wait">
+        <Outlet key={location.pathname} />
+      </AnimatePresence>
+    </PageShell>
+  );
+}
+
 export default function App() {
-  const [page, setPage] = useState('home');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [pantry, setPantry] = useState({ ingredients: [] });
   const [preferences, setPreferences] = useState({
     diet: 'vegetarian',
@@ -29,15 +47,17 @@ export default function App() {
   });
   const [recipes, setRecipes] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [swiperRecipes, setSwiperRecipes] = useState([]);
+  const [swiperIndex, setSwiperIndex] = useState(0);
   const [bootLoaded, setBootLoaded] = useState(false);
   const [bootDelayElapsed, setBootDelayElapsed] = useState(false);
-  // Global scan state so progress/result persist across page switches
   const [scanFile, setScanFile] = useState(null);
   const [scanPreview, setScanPreview] = useState('');
   const [scanProgress, setScanProgress] = useState(0);
   const [scanResult, setScanResult] = useState(null);
   const [scanError, setScanError] = useState('');
   const [scanLoading, setScanLoading] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     const finishLoad = () => setBootLoaded(true);
@@ -56,7 +76,6 @@ export default function App() {
     };
   }, []);
 
-  // Persist scan UI state to localStorage so it survives reloads and page switches
   useEffect(() => {
     try {
       const raw = localStorage.getItem('wiyf.scanState');
@@ -75,34 +94,15 @@ export default function App() {
     try {
       localStorage.setItem(
         'wiyf.scanState',
-        JSON.stringify({ scanProgress, scanResult, scanError, scanLoading })
+        JSON.stringify({ scanProgress, scanResult, scanError, scanLoading }),
       );
     } catch (err) {
       // ignore
     }
   }, [scanProgress, scanResult, scanError, scanLoading]);
 
-  // Parse shared recipe from URL path or query parameter on startup
   useEffect(() => {
     const checkSharedRecipe = async () => {
-      // 1. Check path (e.g., /recipe/carrot-halwa-1234)
-      const pathname = window.location.pathname;
-      if (pathname.startsWith('/recipe/')) {
-        const recipeId = pathname.substring(8);
-        if (recipeId) {
-          try {
-            const { getSharedRecipe } = await import('./services/api');
-            const recipe = await getSharedRecipe(recipeId);
-            setSelectedRecipe(recipe);
-            setPage('recipes');
-            return;
-          } catch (err) {
-            console.warn('Failed to fetch shared recipe from backend:', err);
-          }
-        }
-      }
-
-      // 2. Fallback to query parameter
       try {
         const params = new URLSearchParams(window.location.search);
         const recipeParam = params.get('recipe');
@@ -110,7 +110,7 @@ export default function App() {
           const decodedJson = decodeURIComponent(escape(atob(recipeParam)));
           const recipe = JSON.parse(decodedJson);
           setSelectedRecipe(recipe);
-          setPage('recipes');
+          navigate(`/recipe/${recipe.id}`, { replace: true });
         }
       } catch (err) {
         console.warn('Failed to parse recipe from URL query parameter:', err);
@@ -118,76 +118,104 @@ export default function App() {
     };
 
     checkSharedRecipe();
-  }, []);
+  }, [location.pathname, navigate]);
 
-  // Clean up URL path and query parameters when selectedRecipe is cleared
-  useEffect(() => {
-    if (!selectedRecipe) {
-      const pathname = window.location.pathname;
-      const params = new URLSearchParams(window.location.search);
-      if (pathname.startsWith('/recipe/') || params.has('recipe')) {
-        window.history.replaceState({}, document.title, '/');
-      }
-    }
-  }, [selectedRecipe]);
+  function showNotification(message, tone = 'success') {
+    const id = `${Date.now()}-${Math.random()}`;
+    setNotifications((current) => [...current, { id, message, tone }]);
+    window.setTimeout(() => {
+      setNotifications((current) => current.filter((item) => item.id !== id));
+    }, 2500);
+  }
+
+  function setPage(page) {
+    const routes = {
+      home: '/',
+      scan: '/scan',
+      pantry: '/pantry',
+      preferences: '/preferences',
+      recipes: '/recipes',
+      favorites: '/favorites',
+      planner: '/planner',
+      swiper: '/swiper',
+      community: '/community',
+    };
+
+    navigate(routes[page] || '/');
+  }
+
+  const contextValue = useMemo(
+    () => ({
+      pantry,
+      setPantry,
+      preferences,
+      setPreferences,
+      recipes,
+      setRecipes,
+      selectedRecipe,
+      setSelectedRecipe,
+      swiperRecipes,
+      setSwiperRecipes,
+      swiperIndex,
+      setSwiperIndex,
+      setPage,
+      showNotification,
+      scanFile,
+      setScanFile,
+      scanPreview,
+      setScanPreview,
+      scanProgress,
+      setScanProgress,
+      scanResult,
+      setScanResult,
+      scanError,
+      setScanError,
+      scanLoading,
+      setScanLoading,
+    }),
+    [
+      pantry,
+      preferences,
+      recipes,
+      selectedRecipe,
+      swiperRecipes,
+      swiperIndex,
+      scanFile,
+      scanPreview,
+      scanProgress,
+      scanResult,
+      scanError,
+      scanLoading,
+    ],
+  );
 
   const showBootScreen = !bootLoaded || !bootDelayElapsed;
 
-  const context = {
-    pantry,
-    setPantry,
-    preferences,
-    setPreferences,
-    recipes,
-    setRecipes,
-    selectedRecipe,
-    setSelectedRecipe,
-    setPage,
-    // scan state
-    scanFile,
-    setScanFile,
-    scanPreview,
-    setScanPreview,
-    scanProgress,
-    setScanProgress,
-    scanResult,
-    setScanResult,
-    scanError,
-    setScanError,
-    scanLoading,
-    setScanLoading,
-  };
-  const pages = {
-    home: <LandingPage {...context} />,
-    scan: <ScanFridgePage {...context} />,
-    pantry: <PantryPage {...context} />,
-    preferences: <PreferencesPage {...context} />,
-    recipes: <RecipeResultsPage {...context} />,
-    favorites: <FavoritesPage {...context} />,
-    planner: <MealPlannerPage {...context} />,
-  };
+  if (showBootScreen) {
+    return (
+      <AnimatePresence mode="wait">
+        <WiyfLoadingScreen key="boot-screen" />
+      </AnimatePresence>
+    );
+  }
 
   return (
-    <>
-      {showBootScreen ? (
-        <AnimatePresence mode="wait">
-          <WiyfLoadingScreen key="boot-screen" />
-        </AnimatePresence>
-      ) : (
-        <PageShell page={page} setPage={setPage}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={page}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: 'easeInOut' }}
-            >
-              {pages[page] || pages.home}
-            </motion.div>
-          </AnimatePresence>
-        </PageShell>
-      )}
-    </>
+    <AppStateContext.Provider value={contextValue}>
+      <ToastStack notifications={notifications} />
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/scan" element={<ScanFridgePage />} />
+          <Route path="/pantry" element={<PantryPage />} />
+          <Route path="/preferences" element={<PreferencesPage />} />
+          <Route path="/recipes" element={<RecipeResultsPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/planner" element={<MealPlannerPage />} />
+          <Route path="/swiper" element={<SwiperPage />} />
+          <Route path="/community" element={<CommunityPage />} />
+          <Route path="/recipe/:id" element={<RecipeDetailRoutePage />} />
+        </Route>
+      </Routes>
+    </AppStateContext.Provider>
   );
 }

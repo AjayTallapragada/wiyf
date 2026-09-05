@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import detection, favorites, meal_planner, pantry, preferences, recipes
+from app.routes import community, detection, favorites, meal_planner, pantry, preferences, recipes
 from app.utils.config import settings
 
 app = FastAPI(
@@ -25,6 +25,7 @@ app.include_router(preferences.router, prefix="/api")
 app.include_router(recipes.router, prefix="/api")
 app.include_router(favorites.router, prefix="/api")
 app.include_router(meal_planner.router, prefix="/api")
+app.include_router(community.router)
 
 
 @app.get("/api/health")

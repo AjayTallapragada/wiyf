@@ -12,7 +12,7 @@ export default function ComicButton({ children, className = '', icon: Icon, vari
     <motion.button
       whileHover={{ y: -2, rotate: -1 }}
       whileTap={{ scale: 0.96, rotate: 1 }}
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border-3 border-ink px-5 py-3 font-doodle text-lg font-bold shadow-sticker transition ${variants[variant]} ${className}`}
+      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border-3 border-ink px-5 py-3 font-doodle text-lg font-bold shadow-sticker transition-colors ${variants[variant]} ${className}`}
       {...props}
     >
       {Icon ? <Icon size={20} strokeWidth={3} /> : null}

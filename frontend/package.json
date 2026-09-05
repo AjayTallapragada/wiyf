@@ -14,9 +14,10 @@
     "axios": "^1.6.8",
     "framer-motion": "^11.1.9",
     "lucide-react": "^0.468.0",
-    "vite": "^5.2.11",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.18.1",
+    "vite": "^5.2.11"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",

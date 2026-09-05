@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import AiChef from '../components/ai/AiChef';
 import ComicButton from '../components/ui/ComicButton';
 import ComicCard from '../components/ui/ComicCard';
+import { useAppState } from '../context/AppStateContext';
 
 const floating = ['tomato', 'egg', 'leaf', 'spoon'];
 
@@ -23,7 +24,8 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
 };
 
-export default function LandingPage({ setPage }) {
+export default function LandingPage() {
+  const { setPage } = useAppState();
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,

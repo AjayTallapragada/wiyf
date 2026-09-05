@@ -3,9 +3,11 @@ import { useEffect, useState } from 'react';
 import AiChef from '../components/ai/AiChef';
 import ComicButton from '../components/ui/ComicButton';
 import RecipeCard from '../components/recipes/RecipeCard';
+import { useAppState } from '../context/AppStateContext';
 import { getFavorites, removeFavorite, saveFavorite } from '../services/api';
 
 export default function FavoritesPage() {
+  const { showNotification } = useAppState();
   const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
@@ -14,6 +16,7 @@ export default function FavoritesPage() {
 
   async function remove(id) {
     setFavorites(await removeFavorite(id));
+    showNotification('Removed from favorites.', 'info');
   }
 
   return (

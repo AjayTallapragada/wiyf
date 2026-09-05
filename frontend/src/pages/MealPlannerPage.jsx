@@ -3,9 +3,11 @@ import { useState } from 'react';
 import AiChef from '../components/ai/AiChef';
 import ComicButton from '../components/ui/ComicButton';
 import ComicCard from '../components/ui/ComicCard';
+import { useAppState } from '../context/AppStateContext';
 import { generateMealPlan } from '../services/api';
 
-export default function MealPlannerPage({ pantry, preferences }) {
+export default function MealPlannerPage() {
+  const { pantry, preferences } = useAppState();
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(false);
 

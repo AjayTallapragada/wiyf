@@ -55,6 +55,15 @@ npm install
 npm run dev
 ```
 
+## Production Deployment
+
+The backend can be deployed from `backend/` using the Render service in `render.yaml`. Deploy the frontend from `frontend/` with Vercel and configure these build environment variables:
+
+- `VITE_API_BASE_URL=https://<backend-host>/api`
+- `VITE_AI_API_BASE_URL=https://<ai-service-host>`
+
+The community tab uses the backend WebSocket endpoint at `/ws/community` and automatically converts the backend URL to `wss://` in production. Keep the backend on a single instance while community messages are stored in memory; use a shared broker or database before scaling horizontally.
+
 ## Environment Variables
 
 - `VITE_API_BASE_URL` defaults to `http://127.0.0.1:8080/api`

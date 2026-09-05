@@ -4,12 +4,23 @@ import { motion } from 'framer-motion';
 import AiChef from '../components/ai/AiChef';
 import ComicButton from '../components/ui/ComicButton';
 import RecipeCard from '../components/recipes/RecipeCard';
+import { useAppState } from '../context/AppStateContext';
 import RecipeDetailPage from './RecipeDetailPage';
 import ComicCard from '../components/ui/ComicCard';
 import { generateRecipes, saveFavorite } from '../services/api';
 import { stagger } from '../animations/variants';
 
-export default function RecipeResultsPage({ pantry, preferences, recipes, setRecipes, selectedRecipe, setSelectedRecipe, setPage }) {
+export default function RecipeResultsPage() {
+  const {
+    pantry,
+    preferences,
+    recipes,
+    setRecipes,
+    selectedRecipe,
+    setSelectedRecipe,
+    setPage,
+    showNotification,
+  } = useAppState();
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [visibleCount, setVisibleCount] = useState(() => Math.min(3, recipes.length));
@@ -167,6 +178,7 @@ export default function RecipeResultsPage({ pantry, preferences, recipes, setRec
 
   async function favorite(recipe) {
     await saveFavorite(recipe);
+    showNotification('Saved to favorites.', 'success');
   }
 
   if (selectedRecipe) {
